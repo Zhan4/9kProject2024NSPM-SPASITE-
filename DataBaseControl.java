@@ -1,5 +1,6 @@
 import java.sql.*;
 import java.util.*;
+import java.util.stream.Collector;
 
 public class DataBaseControl {
 
@@ -13,7 +14,7 @@ public class DataBaseControl {
         postQuery(surname, name, classNumber, classLiter, points);
     }
 
-    public ArrayList<User> getUsers(ArrayList<User> users) {
+    public ArrayList<User> updateUsers(ArrayList<User> users) {
         getQuery(users);
         return users;
     }
@@ -42,6 +43,8 @@ public class DataBaseControl {
             ex.printStackTrace();
         }
     }
+
+
 
     private void getQuery(ArrayList<User> users) {
         try {
@@ -105,45 +108,49 @@ public class DataBaseControl {
         }
     }
 
+
+    //WINNERS conTROLLING
     public void getWinners(ArrayList<User> users){
         getListOfWinners(users);
     }
+    private void getListOfWinners(ArrayList<User> users) {
+        // Создаем список для хранения трех максимальных баллов
+        ArrayList<Integer> topThreePoints = new ArrayList<>();
 
-    private void getListOfWinners(ArrayList<User> users){
-        HashMap<String, Integer> tempHash = new HashMap<>();
-        for(User temp : users){
+        // Находим три максимальных балла
+        for (User temp : users) {
             int pointsOfTemp = temp.getPoints();
-            String FirstAndLastName = temp.surname + " " + temp.name;
-            tempHash.put(FirstAndLastName, pointsOfTemp);
-        }
-        LinkedHashMap<String, Integer> sortedMap = sortByValue(tempHash);
-
-        int cnt = 0;
-        for (Map.Entry<String, Integer> entry : sortedMap.entrySet()) {
-            if(cnt == 3){
-                break;
-            } else{
-                System.out.println("ФИ: " + entry.getKey() + " Очки: " + entry.getValue());
+            if (topThreePoints.size() < 3 || pointsOfTemp > topThreePoints.get(2)) {
+                // Если список пустой или балл больше минимального из трех максимальных,
+                // добавляем его в список, заменяя при необходимости
+                if (topThreePoints.size() >= 3) {
+                    topThreePoints.remove(2);
+                }
+                int i = 0;
+                while (i < topThreePoints.size() && pointsOfTemp < topThreePoints.get(i)) {
+                    i++;
+                }
+                topThreePoints.add(i, pointsOfTemp);
             }
-            cnt++;
         }
 
-    }
+        // Сортируем пользователей по убыванию баллов
+        users.sort((user1, user2) -> Integer.compare(user2.getPoints(), user1.getPoints()));
 
-    public static LinkedHashMap<String, Integer> sortByValue(HashMap<String, Integer> map) {
-        // Получение списка записей
-        ArrayList<Map.Entry<String, Integer>> list = new ArrayList<>(map.entrySet());
-
-        // Сортировка списка по значениям
-        list.sort(Map.Entry.comparingByValue());
-
-        // Создание LinkedHashMap для сохранения порядка вставки
-        LinkedHashMap<String, Integer> sortedMap = new LinkedHashMap<>();
-        for (Map.Entry<String, Integer> entry : list) {
-            sortedMap.put(entry.getKey(), entry.getValue());
+        // Выводим пользователей с баллами, равными максимальным
+        int cnt = 0;
+        for (User temp : users) {
+            if (cnt == 3) {
+                break;
+            }
+            int pointsOfTemp = temp.getPoints();
+            if (topThreePoints.contains(pointsOfTemp)) {
+                System.out.println("ФИ: " + temp.surname + " " + temp.name + " Очки: " + pointsOfTemp);
+                cnt++;
+            }
         }
-
-        return sortedMap;
     }
+
+
 
 }
